@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易老黄历</title>
+    <style>
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f7f4ed;
+            color: #333;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .card {
+            background: #fff;
+            border: 2px solid #b83b5e;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #b83b5e;
+            margin-bottom: 20px;
+        }
+        .date-picker {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input[type="date"] {
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .info-header {
+            background: #fbecec;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+        .yi-ji {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .yi, .ji {
+            flex: 1;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .yi { background: #e8f5e9; border-left: 5px solid #2e7d32; }
+        .ji { background: #ffebee; border-left: 5px solid #c62828; }
+        .yi h3 { color: #2e7d32; margin-top: 0; }
+        .ji h3 { color: #c62828; margin-top: 0; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .ji-text { color: #2e7d32; font-weight: bold; }
+        .xiong-text { color: #c62828; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🗓️ 老黄历</h1>
+    
+    <div class="date-picker">
+        <label for="selectDate"><strong>选择日期：</strong></label>
+        <input type="date" id="selectDate">
+    </div>
+
+    <div class="info-header" id="calendarHeader"></div>
+
+    <div class="yi-ji">
+        <div class="yi">
+            <h3>【宜】</h3>
+            <div id="yiContent"></div>
+        </div>
+        <div class="ji">
+            <h3>【忌】</h3>
+            <div id="jiContent"></div>
+        </div>
+    </div>
+
+    <h2>⏰ 十二时辰吉凶</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>时辰</th>
+                <th>时间</th>
+                <th>吉凶</th>
+                <th>宜</th>
+                <th>忌</th>
+            </tr>
+        </thead>
+        <tbody id="shichenTable"></tbody>
+    </table>
+</div>
+
+<script>
+    // 基础数据定义
+    const tianGan = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+    const diZhi = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    const shengXiao = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"];
+    const chongShengXiao = ["马", "羊", "猴", "鸡", "狗", "猪", "鼠", "牛", "虎", "兔", "龙", "蛇"];
+
+    const shichenList = [
+        { name: "子时", time: "23:00 - 01:00", status: "吉", yi: "祈福、求嗣、订婚、开市", ji: "赴任、词讼" },
+        { name: "丑时", time: "01:00 - 03:00", status: "凶", yi: "修造、佐时", ji: "祈福、求嗣" },
+        { name: "寅时", time: "03:00 - 05:00", status: "吉", yi: "订婚、嫁娶、求财、开市", ji: "祭祀、祈福" },
+        { name: "卯时", time: "05:00 - 07:00", status: "吉", yi: "祈福、求嗣、出行、求财", ji: "赴任、词讼" },
+        { name: "辰时", time: "07:00 - 09:00", status: "凶", yi: "诸事不宜", ji: "日破大耗、诸事不宜" },
+        { name: "巳时", time: "09:00 - 11:00", status: "吉", yi: "盖屋、移徙、安葬、嫁娶", ji: "祭祀、祈福" },
+        { name: "午时", time: "11:00 - 13:00", status: "凶", yi: "求嗣、订婚、嫁娶、求财", ji: "祈福、祭祀" },
+        { name: "未时", time: "13:00 - 15:00", status: "吉", yi: "修造、入宅、安葬、祈福", ji: "争讼、针灸" },
+        { name: "申时", time: "15:00 - 17:00", status: "凶", yi: "祈福、求嗣、出行", ji: "赴任、词讼、修造" },
+        { name: "酉时", time: "17:00 - 19:00", status: "凶", yi: "订婚、嫁娶、开市、安床", ji: "赴任、出行" },
+        { name: "戌时", time: "19:00 - 21:00", status: "吉", yi: "祭祀、祈福、酬神、修造", ji: "赴任、出行" },
+        { name: "亥时", time: "21:00 - 23:00", status: "吉", yi: "求财、见贵、订婚、嫁娶", ji: "赴任、修造" }
+    ];
+
+    const yiList = ["祭祀", "祈福", "求嗣", "开光", "出行", "理发", "动土", "安床", "交易", "立券", "挂匾"];
+    const jiList = ["嫁娶", "安葬", "词讼", "破土", "伐木", "作灶", "入宅", "移徙", "针灸"];
+
+    // 格式化日期为 YYYY-MM-DD
+    function formatDate(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    // 简化版干支计算（按公历日推算示例）
+    function getGanZhi(date) {
+        const baseDate = new Date(1900, 0, 31); // 1900年庚子年
+        const offset = Math.floor((date - baseDate) / (24 * 60 * 60 * 1000));
+        
+        const ganIdx = (offset + 6) % 10;
+        const zhiIdx = (offset + 0) % 12;
+        
+        return {
+            ganZhi: tianGan[ganIdx < 0 ? ganIdx + 10 : ganIdx] + diZhi[zhiIdx < 0 ? zhiIdx + 12 : zhiIdx],
+            chong: chongShengXiao[zhiIdx < 0 ? zhiIdx + 12 : zhiIdx]
+        };
+    }
+
+    // 更新页面展示
+    function updateCalendar(selectedDateStr) {
+        const targetDate = new Date(selectedDateStr);
+        const dayInfo = getGanZhi(targetDate);
+
+        // 渲染头部信息
+        document.getElementById("calendarHeader").innerHTML = `
+            <strong>公历：</strong> ${targetDate.getFullYear()} 年 ${targetDate.getMonth() + 1} 月 ${targetDate.getDate()} 日<br>
+            <strong>干支：</strong> ${dayInfo.ganZhi}日<br>
+            <strong>冲煞：</strong> 冲${dayInfo.chong}
+        `;
+
+        // 根据日期的不同微调宜忌（根据日期哈希值打乱顺序作为简单示例）
+        const daySeed = targetDate.getDate();
+        const todayYi = yiList.slice(daySeed % 3, (daySeed % 3) + 5).join("、");
+        const todayJi = jiList.slice(daySeed % 2, (daySeed % 2) + 4).join("、");
+
+        document.getElementById("yiContent").innerText = todayYi;
+        document.getElementById("jiContent").innerText = todayJi;
+
+        // 渲染十二时辰
+        const tbody = document.getElementById("shichenTable");
+        tbody.innerHTML = "";
+        
+        shichenList.forEach(item => {
+            const tr = document.createElement("tr");
+            const statusClass = item.status === "吉" ? "ji-text" : "xiong-text";
+            
+            tr.innerHTML = `
+                <td><strong>${item.name}</strong></td>
+                <td>${item.time}</td>
+                <td class="${statusClass}">${item.status}</td>
+                <td>${item.yi}</td>
+                <td>${item.ji}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 初始化
+    const dateInput = document.getElementById("selectDate");
+    const todayStr = formatDate(new Date());
+    dateInput.value = todayStr;
+    updateCalendar(todayStr);
+
+    // 监听日期变化
+    dateInput.addEventListener("change", function(e) {
+        if (e.target.value) {
+            updateCalendar(e.target.value);
+        }
+    });
+</script>
+
+</body>
+</html>
