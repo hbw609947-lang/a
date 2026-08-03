@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>罗家通书 · 乾坤历书</title>
     <script src="https://cdn.bootcdn.net/ajax/libs/lunar-javascript/1.6.12/lunar.min.js"></script>
     <style>
@@ -152,16 +151,16 @@
     </div>
 
     <div class="date-section">
-        <div class="gongli-row" id="gongli-str">-</div>
-        <div class="nongli-main" id="nongli-str">-</div>
-        <div class="ganzhi-row" id="ganzhi-str">-</div>
+        <div class="gongli-row" id="gongli-str">加载中...</div>
+        <div class="nongli-main" id="nongli-str">加载中...</div>
+        <div class="ganzhi-row" id="ganzhi-str">加载中...</div>
     </div>
 
     <div class="section-box">
-        <div class="sec-title">☯️ 岁煞神煞 / 星宿纳音</div>
+        <div class="sec-title">☯️ 岁煞神煞 / 建除星宿</div>
         <div class="sec-content grid-2">
             <div>五行纳音：<b id="nayin">-</b></div>
-            <div>建除十二神：<b id="jianshen">-</b></div>
+            <div>建除十二神：<b id="jianshen" style="color:var(--text-red);">-</b></div>
             <div>二十八宿：<b id="star">-</b></div>
             <div>冲煞：<b id="chongsha" style="color:var(--text-red);">-</b></div>
         </div>
@@ -229,78 +228,108 @@
 </div>
 
 <script>
-    // 容错安全取值函数
-    function safe(fn, defaultVal = '-') {
+    // 算法库安全取值工具
+    function getSafe(fn, defaultVal = '-') {
         try {
             const res = fn();
-            return res !== undefined && res !== null && res !== '' ? res : defaultVal;
+            return (res !== undefined && res !== null && res !== '') ? res : defaultVal;
         } catch (e) {
             return defaultVal;
         }
     }
 
+    // 专属建除十二神精准推算（防报错兜底）
+    function calculateJianShen(lunar) {
+        // 先尝试通过库函数直接获取
+        try {
+            if (typeof lunar.getJianShen === 'function') return lunar.getJianShen() + '日';
+            if (typeof lunar.getZhiXing === 'function') return lunar.getZhiXing() + '日';
+        } catch (e) {}
+
+        // 兜底逻辑：通过月支与日支算法推算建除十二神
+        const jianList = ["建", "除", "满", "平", "定", "执", "破", "危", "成", "收", "开", "闭"];
+        const dizhi = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+        
+        try {
+            const monthZhi = lunar.getMonthInGanZhi().charAt(1); // 获取月支
+            const dayZhi = lunar.getDayInGanZhi().charAt(1);     // 获取日支
+            
+            const mIndex = dizhi.indexOf(monthZhi);
+            const dIndex = dizhi.indexOf(dayZhi);
+            
+            if (mIndex !== -1 && dIndex !== -1) {
+                let offset = (dIndex - mIndex + 12) % 12;
+                return jianList[offset] + '日';
+            }
+        } catch(e) {}
+        
+        return '平日';
+    }
+
+    // 渲染老黄历
     function renderTongshu(targetDate) {
         const d = targetDate || new Date();
         if (typeof Lunar === 'undefined') {
-            alert("算法库加载中，请稍后刷新的试");
+            document.getElementById('gongli-str').innerText = "算法库加载中，请稍后刷新...";
             return;
         }
+        
         const lunar = Lunar.fromDate(d);
 
         // 1. 公农历与干支
         document.getElementById('gongli-str').innerText = 
-            `公历：${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${safe(() => lunar.getWeekInChinese())}`;
+            `公历：${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${getSafe(() => lunar.getWeekInChinese())}`;
         
         document.getElementById('nongli-str').innerText = 
-            `农历 ${safe(() => lunar.getMonthInChinese())}月 ${safe(() => lunar.getDayInChinese())}`;
+            `农历 ${getSafe(() => lunar.getMonthInChinese())}月 ${getSafe(() => lunar.getDayInChinese())}`;
             
         document.getElementById('ganzhi-str').innerText = 
-            `岁次：${safe(() => lunar.getYearInGanZhi())}（${safe(() => lunar.getYearShengXiao())}）年 ${safe(() => lunar.getMonthInGanZhi())}月 ${safe(() => lunar.getDayInGanZhi())}日`;
+            `岁次：${getSafe(() => lunar.getYearInGanZhi())}（${getSafe(() => lunar.getYearShengXiao())}）年 ${getSafe(() => lunar.getMonthInGanZhi())}月 ${getSafe(() => lunar.getDayInGanZhi())}日`;
 
-        // 2. 细节
-        document.getElementById('nayin').innerText = safe(() => lunar.getDayNaYin());
-        document.getElementById('jianshen').innerText = safe(() => lunar.getJianShen() + '位');
-        document.getElementById('star').innerText = safe(() => `${lunar.getXiu()}${lunar.getAnimal()}`);
-        document.getElementById('chongsha').innerText = safe(() => `冲${lunar.getDayChongShengXiao()} 煞${lunar.getDaySha()}`);
+        // 2. 建除十二神 & 细节神煞
+        document.getElementById('nayin').innerText = getSafe(() => lunar.getDayNaYin());
+        document.getElementById('jianshen').innerText = calculateJianShen(lunar); // 调用强化版建除十二神方法
+        document.getElementById('star').innerText = getSafe(() => `${lunar.getXiu()}${lunar.getAnimal()}`);
+        document.getElementById('chongsha').innerText = getSafe(() => `冲${lunar.getDayChongShengXiao()} 煞${lunar.getDaySha()}`);
 
         // 3. 方位
-        document.getElementById('pos-xi').innerText = safe(() => lunar.getDayPositionXiDesc());
-        document.getElementById('pos-fu').innerText = safe(() => lunar.getDayPositionFuDesc());
-        document.getElementById('pos-cai').innerText = safe(() => lunar.getDayPositionCaiDesc());
-        document.getElementById('taishen').innerText = safe(() => lunar.getDayPositionTai());
+        document.getElementById('pos-xi').innerText = getSafe(() => lunar.getDayPositionXiDesc());
+        document.getElementById('pos-fu').innerText = getSafe(() => lunar.getDayPositionFuDesc());
+        document.getElementById('pos-cai').innerText = getSafe(() => lunar.getDayPositionCaiDesc());
+        document.getElementById('taishen').innerText = getSafe(() => lunar.getDayPositionTai());
 
         // 4. 彭祖百忌
-        document.getElementById('pengzu').innerHTML = safe(() => `${lunar.getPengZuGan()}<br>${lunar.getPengZuZhi()}`);
+        document.getElementById('pengzu').innerHTML = getSafe(() => `${lunar.getPengZuGan()}<br>${lunar.getPengZuZhi()}`);
 
         // 5. 宜忌
-        const yi = safe(() => lunar.getDayYi(), []);
-        const ji = safe(() => lunar.getDayJi(), []);
-        document.getElementById('yi-list').innerHTML = Array.isArray(yi) && yi.length ? yi.join(' · ') : '诸事不宜';
-        document.getElementById('ji-list').innerHTML = Array.isArray(ji) && ji.length ? ji.join(' · ') : '诸事无忌';
+        const yi = getSafe(() => lunar.getDayYi(), []);
+        const ji = getSafe(() => lunar.getDayJi(), []);
+        document.getElementById('yi-list').innerHTML = (Array.isArray(yi) && yi.length) ? yi.join(' · ') : '诸事不宜';
+        document.getElementById('ji-list').innerHTML = (Array.isArray(ji) && ji.length) ? ji.join(' · ') : '诸事无忌';
 
         // 6. 神煞
-        const jishen = safe(() => lunar.getDayJiShen(), []);
-        const xionshen = safe(() => lunar.getDayXiongSha(), []);
-        document.getElementById('jishen').innerText = Array.isArray(jishen) && jishen.length ? jishen.join(' ') : '无';
-        document.getElementById('xionshen').innerText = Array.isArray(xionshen) && xionshen.length ? xionshen.join(' ') : '无';
+        const jishen = getSafe(() => lunar.getDayJiShen(), []);
+        const xionshen = getSafe(() => lunar.getDayXiongSha(), []);
+        document.getElementById('jishen').innerText = (Array.isArray(jishen) && jishen.length) ? jishen.join(' ') : '无';
+        document.getElementById('xionshen').innerText = (Array.isArray(xionshen) && xionshen.length) ? xionshen.join(' ') : '无';
 
         // 7. 十二时辰
-        const times = safe(() => lunar.getTimes(), []);
+        const times = getSafe(() => lunar.getTimes(), []);
         let html = '';
-        if (Array.isArray(times)) {
+        if (Array.isArray(times) && times.length) {
             times.forEach(t => {
-                const luck = safe(() => t.getTianShenLuck(), '平');
+                const luck = getSafe(() => t.getTianShenLuck(), '平');
                 const luckClass = luck === '吉' ? 'ji-tag' : (luck === '凶' ? 'xiong-tag' : '');
-                const tYi = safe(() => t.getYi(), []);
-                const tJi = safe(() => t.getJi(), []);
-                const yiStr = Array.isArray(tYi) && tYi.length ? tYi.slice(0, 2).join(',') : '无';
-                const jiStr = Array.isArray(tJi) && tJi.length ? tJi.slice(0, 2).join(',') : '无';
+                const tYi = getSafe(() => t.getYi(), []);
+                const tJi = getSafe(() => t.getJi(), []);
+                const yiStr = (Array.isArray(tYi) && tYi.length) ? tYi.slice(0, 2).join(',') : '无';
+                const jiStr = (Array.isArray(tJi) && tJi.length) ? tJi.slice(0, 2).join(',') : '无';
 
                 html += `<tr>
-                    <td><b>${safe(() => t.getMinGanZhi())}时</b></td>
-                    <td>${safe(() => t.getGanZhi())}</td>
-                    <td class="${luckClass}">${safe(() => t.getTianShen())} (${luck})</td>
-                    <td>冲${safe(() => t.getChongShengXiao())}</td>
+                    <td><b>${getSafe(() => t.getMinGanZhi())}时</b></td>
+                    <td>${getSafe(() => t.getGanZhi())}</td>
+                    <td class="${luckClass}">${getSafe(() => t.getTianShen())} (${luck})</td>
+                    <td>冲${getSafe(() => t.getChongShengXiao())}</td>
                     <td style="color:var(--green-color);">${yiStr}</td>
                     <td style="color:var(--text-red);">${jiStr}</td>
                 </tr>`;
