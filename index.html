@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>罗家通书 · 乾坤历书</title>
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4efe6;
+            --card-bg: #fffcf7;
+            --border-red: #a81c1c;
+            --text-black: #1a1a1a;
+            --text-red: #a81c1c;
+            --text-gray: #555555;
+            --green-color: #1b7a38;
+        }
+
+        body {
+            font-family: "PingFang SC", "Hiragino Sans GB", "Kaiti SC", "STKaiti", serif;
+            background-color: var(--bg-color);
+            color: var(--text-black);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tongshu-page {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            border: 3px double var(--border-red);
+            border-radius: 4px;
+            padding: 12px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* 通书顶头标题栏 */
+        .header {
+            text-align: center;
+            border-bottom: 2px solid var(--border-red);
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--text-red);
+            letter-spacing: 4px;
+            font-weight: bold;
+        }
+        .header .sub {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-top: 4px;
+        }
+
+        /* 核心日期显示区 */
+        .date-section {
+            border: 1px solid var(--border-red);
+            background: #fff8f0;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .gongli-row { font-size: 13px; color: var(--text-gray); }
+        .nongli-main { font-size: 30px; color: var(--text-red); font-weight: bold; margin: 4px 0; }
+        .ganzhi-row { font-size: 15px; font-weight: bold; color: var(--text-black); }
+
+        /* 通用区块表格 */
+        .section-box {
+            border: 1px solid #d0c4b0;
+            margin-bottom: 8px;
+            background: #fff;
+        }
+        .sec-title {
+            background: var(--border-red);
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 3px 8px;
+            letter-spacing: 1px;
+        }
+        .sec-content {
+            padding: 8px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        /* 网格信息 */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; text-align: center; }
+
+        /* 宜忌大框 */
+        .yiji-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .yi-box { border: 1px solid var(--green-color); background: rgba(27, 122, 56, 0.05); }
+        .ji-box { border: 1px solid var(--border-red); background: rgba(168, 28, 28, 0.05); }
+        .yi-header { background: var(--green-color); color: white; padding: 2px 6px; font-size: 13px; font-weight: bold; }
+        .ji-header { background: var(--border-red); color: white; padding: 2px 6px; font-size: 13px; font-weight: bold; }
+        .yiji-list { padding: 6px; font-size: 12px; line-height: 1.5; color: #222; }
+
+        /* 十二时辰细表 */
+        .shichen-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            text-align: center;
+        }
+        .shichen-table th {
+            background: #eae2d3;
+            border: 1px solid #c5b8a0;
+            padding: 4px 2px;
+            color: var(--text-black);
+        }
+        .shichen-table td {
+            border: 1px solid #e0d5c1;
+            padding: 4px 2px;
+        }
+        .ji-tag { color: var(--green-color); font-weight: bold; }
+        .xiong-tag { color: var(--text-red); font-weight: bold; }
+
+        /* 日期选择器栏 */
+        .picker-bar {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .picker-bar input {
+            padding: 5px 10px;
+            border: 1px solid var(--border-red);
+            border-radius: 4px;
+            background: #fff;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="tongshu-page">
+    <div class="header">
+        <h1>羅家通書 · 廣經堂</h1>
+        <div class="sub">【包罗万象 · 择日择吉 · 趋吉避凶】</div>
+    </div>
+
+    <div class="picker-bar">
+        <label for="date-select" style="font-size:12px;">📅 切换日期：</label>
+        <input type="date" id="date-select" onchange="loadDate(this.value)">
+    </div>
+
+    <div class="date-section">
+        <div class="gongli-row" id="gongli-str">加载中...</div>
+        <div class="nongli-main" id="nongli-str">加载中...</div>
+        <div class="ganzhi-row" id="ganzhi-str">加载中...</div>
+    </div>
+
+    <div class="section-box">
+        <div class="sec-title">☯️ 岁煞神煞 / 星宿纳音</div>
+        <div class="sec-content grid-2">
+            <div>五行纳音：<b id="nayin">-</b></div>
+            <div>建除十二神：<b id="jianshen">-</b></div>
+            <div>二十八宿：<b id="star">-</b></div>
+            <div>九星格局：<b id="jiuxing">-</b></div>
+            <div>冲煞：<b id="chongsha" style="color:var(--text-red);">-</b></div>
+            <div>物候节气：<b id="jieqi">-</b></div>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <div class="sec-title">🧭 每日吉神方位与胎神</div>
+        <div class="sec-content">
+            <div class="grid-3" style="margin-bottom: 6px;">
+                <div>喜神：<b id="pos-xi" style="color:var(--text-red);">-</b></div>
+                <div>福神：<b id="pos-fu">-</b></div>
+                <div>财神：<b id="pos-cai" style="color:var(--green-color);">-</b></div>
+            </div>
+            <div class="grid-2" style="border-top:1px dashed #ccc; pt:4px; margin-top:4px;">
+                <div>阳贵神：<span id="pos-yanggui">-</span></div>
+                <div>阴贵神：<span id="pos-yingui">-</span></div>
+            </div>
+            <div style="border-top:1px dashed #ccc; margin-top:4px; padding-top:4px; color:#a81c1c;">
+                👶 <b>今日胎神占方：</b><span id="taishen">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <div class="sec-title">⚠️ 彭祖百忌</div>
+        <div class="sec-content" id="pengzu" style="color:var(--text-red); font-weight:bold;">
+            -
+        </div>
+    </div>
+
+    <div class="yiji-grid">
+        <div class="yi-box">
+            <div class="yi-header">【 宜 】</div>
+            <div class="yiji-list" id="yi-list">-</div>
+        </div>
+        <div class="ji-box">
+            <div class="ji-header">【 忌 】</div>
+            <div class="yiji-list" id="ji-list">-</div>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <div class="sec-title">✨ 吉神宜趋与凶煞宜忌</div>
+        <div class="sec-content grid-2">
+            <div><b>吉神宜趋：</b><br><span id="jishen" style="color:var(--green-color);">-</span></div>
+            <div><b>凶神宜忌：</b><br><span id="xionshen" style="color:var(--text-red);">-</span></div>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <div class="sec-title">⏰ 十二时辰吉凶细表</div>
+        <div style="overflow-x:auto;">
+            <table class="shichen-table">
+                <thead>
+                    <tr>
+                        <th>时辰</th>
+                        <th>干支</th>
+                        <th>吉凶</th>
+                        <th>冲煞</th>
+                        <th>宜</th>
+                        <th>忌</th>
+                    </tr>
+                </thead>
+                <tbody id="shichen-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function renderTongshu(targetDate) {
+        const d = targetDate || new Date();
+        const lunar = Lunar.fromDate(d);
+
+        // 1. 公历/农历/干支
+        document.getElementById('gongli-str').innerText = 
+            `公历：${d.getFullYear()}年 ${d.getMonth() + 1}月 ${d.getDate()}日 星期${lunar.getWeekInChinese()}`;
+        
+        document.getElementById('nongli-str').innerText = 
+            `农历 ${lunar.getMonthInChinese()}月 ${lunar.getDayInChinese()}`;
+            
+        document.getElementById('ganzhi-str').innerText = 
+            `岁次：${lunar.getYearInGanZhi()}（${lunar.getYearShengXiao()}）年  ${lunar.getMonthInGanZhi()}月  ${lunar.getDayInGanZhi()}日`;
+
+        // 2. 细节神煞
+        document.getElementById('nayin').innerText = lunar.getDayNaYin();
+        document.getElementById('jianshen').innerText = lunar.getJianShen() + '位';
+        document.getElementById('star').innerText = `${lunar.getXiu()}${lunar.getZheng()}${lunar.getAnimal()}`;
+        document.getElementById('jiuxing').innerText = lunar.getDayNineStar().toString();
+        document.getElementById('chongsha').innerText = `冲${lunar.getDayChongShengXiao()} 煞${lunar.getDaySha()}`;
+        
+        // 节气
+        const jq = lunar.getJieQi();
+        document.getElementById('jieqi').innerText = jq ? jq : (lunar.getPrevJieQi().getName() + '后');
+
+        // 3. 方位与胎神
+        document.getElementById('pos-xi').innerText = lunar.getDayPositionXiDesc();
+        document.getElementById('pos-fu').innerText = lunar.getDayPositionFuDesc();
+        document.getElementById('pos-cai').innerText = lunar.getDayPositionCaiDesc();
+        document.getElementById('pos-yanggui').innerText = lunar.getDayPositionYangGuiDesc();
+        document.getElementById('pos-yingui').innerText = lunar.getDayPositionYinGuiDesc();
+        document.getElementById('taishen').innerText = lunar.getDayPositionTai();
+
+        // 4. 彭祖百忌
+        document.getElementById('pengzu').innerHTML = 
+            `${lunar.getPengZuGan()}<br>${lunar.getPengZuZhi()}`;
+
+        // 5. 宜忌
+        const yi = lunar.getDayYi();
+        const ji = lunar.getDayJi();
+        document.getElementById('yi-list').innerHTML = yi.length ? yi.join(' · ') : '平（诸事不宜大动作）';
+        document.getElementById('ji-list').innerHTML = ji.length ? ji.join(' · ') : '诸事无大忌';
+
+        // 6. 吉神/凶煞
+        const jishen = lunar.getDayJiShen();
+        const xionshen = lunar.getDayXiongSha();
+        document.getElementById('jishen').innerText = jishen.length ? jishen.join(' ') : '无';
+        document.getElementById('xionshen').innerText = xionshen.length ? xionshen.join(' ') : '无';
+
+        // 7. 渲染十二时辰细表
+        const times = lunar.getTimes();
+        let html = '';
+        times.forEach(t => {
+            const luck = t.getTianShenLuck();
+            const luckClass = luck === '吉' ? 'ji-tag' : 'xiong-tag';
+            const yiList = t.getYi().length ? t.getYi().slice(0, 3).join(',') : '无';
+            const jiList = t.getJi().length ? t.getJi().slice(0, 3).join(',') : '无';
+
+            html += `<tr>
+                <td><b>${t.getMinGanZhi()}时</b><br><span style="color:#777;font-size:9px;">${t.getHm()}</span></td>
+                <td>${t.getGanZhi()}</td>
+                <td class="${luckClass}">${t.getTianShen()} (${luck})</td>
+                <td>冲${t.getChongShengXiao()}</td>
+                <td style="color:var(--green-color);">${yiList}</td>
+                <td style="color:var(--text-red);">${jiList}</td>
+            </tr>`;
+        });
+        document.getElementById('shichen-body').innerHTML = html;
+    }
+
+    // 日期选择响应
+    function loadDate(dateStr) {
+        if (!dateStr) return;
+        const parts = dateStr.split('-');
+        const target = new Date(parts[0], parts[1] - 1, parts[2]);
+        renderTongshu(target);
+    }
+
+    // 页面初始化
+    window.onload = function() {
+        const today = new Date();
+        // 设置 datepicker 默认值为今天
+        document.getElementById('date-select').value = today.toISOString().split('T')[0];
+        renderTongshu(today);
+    };
+</script>
+
+</body>
+</html>
