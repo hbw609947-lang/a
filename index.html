@@ -1,147 +1,205 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>离线老黄历</title>
-<script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.min.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:PingFang SC,system-ui,-apple-system}
-body{background:#f7f3e9;color:#333;padding:12px;max-width:700px;margin:0 auto}
-.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px #00000012}
-.title{font-size:20px;color:#a82222;text-align:center;margin-bottom:14px;font-weight:bold}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;align-items:center}
-.label{width:90px;color:#666}
-.val{flex:1}
-input[type="date"]{border:1px solid #ddd;padding:8px;border-radius:8px;font-size:16px;width:100%}
-.item-block{padding:10px;border-radius:10px;margin:6px 0}
-.yi{background:#edf7ee;color:#197526}
-.ji{background:#fef0f0;color:#b22222}
-.huangdao{background:#e8f5e9;color:#1b7c23;padding:8px;border-radius:8px;margin:6px 0}
-.heidao{background:#ffebee;color:#a81818;padding:8px;border-radius:8px;margin:6px 0}
-.time-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.time-cell{border:1px solid #eee;padding:8px;border-radius:8px;font-size:14px}
-.star{margin:8px 0;padding:8px;background:#faf7f0;border-radius:8px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>罗家通书 · 乾坤黄历</title>
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+    <style>
+        :root {
+            --bg-color: #f7f4ed;
+            --card-bg: #ffffff;
+            --main-red: #b81c22;
+            --main-green: #2e7d32;
+            --text-color: #2c2c2c;
+            --border-color: #e0dacf;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid var(--main-red);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: var(--main-red);
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .date-box {
+            text-align: center;
+            background: #fdfaf5;
+            border: 1px dashed #d1c7b7;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .gongli {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .nongli {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--main-red);
+            margin: 6px 0;
+        }
+
+        .ganzhi {
+            font-size: 14px;
+            color: #444;
+            font-weight: 500;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            background: #faf8f5;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .yiji-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .yi-box, .ji-box {
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        .yi-box {
+            background-color: rgba(46, 125, 50, 0.08);
+            border: 1px solid rgba(46, 125, 50, 0.2);
+        }
+
+        .ji-box {
+            background-color: rgba(184, 28, 34, 0.08);
+            border: 1px solid rgba(184, 28, 34, 0.2);
+        }
+
+        .title-yi { color: var(--main-green); font-weight: bold; font-size: 15px; margin-bottom: 6px; }
+        .title-ji { color: var(--main-red); font-weight: bold; font-size: 15px; margin-bottom: 6px; }
+
+        .content-text { font-size: 13px; line-height: 1.6; color: #333; }
+
+        .zhenyan-box {
+            background: #f4efeb;
+            border-left: 4px solid var(--main-red);
+            padding: 10px 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            color: #555;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
-<div class="card">
-<div class="title">📜 老黄历</div>
-<input type="date" id="daySelect">
-</div>
 
-<div class="card" id="resultBox">
+<div class="container">
+    <div class="header">
+        <h1>📜 罗家通书 · 乾坤黄历</h1>
+    </div>
+
+    <div class="date-box">
+        <div class="gongli" id="gongli-text">loading...</div>
+        <div class="nongli" id="nongli-text">loading...</div>
+        <div class="ganzhi" id="ganzhi-text">loading...</div>
+    </div>
+
+    <div class="details-grid">
+        <div>五行：<span id="nayin">-</span></div>
+        <div>建除：<span id="jianshen">-</span></div>
+        <div>冲煞：<span id="chongsha">-</span></div>
+        <div>星宿：<span id="xingxiu">-</span></div>
+    </div>
+
+    <div class="yiji-container">
+        <div class="yi-box">
+            <div class="title-yi">【 宜 】</div>
+            <div class="content-text" id="yi-text">-</div>
+        </div>
+        <div class="ji-box">
+            <div class="title-ji">【 忌 】</div>
+            <div class="content-text" id="ji-text">-</div>
+        </div>
+    </div>
+
+    <div class="zhenyan-box">
+        📖 <strong>《通书》箴言：</strong><br>
+        <span id="zhenyan-text">卯不穿井，水泉不香；己不破券，二主分张。</span>
+    </div>
 </div>
 
 <script>
-// 二十八星宿
-const xingxiuList = [
-{name:"角",desc:"角木蛟，吉；宜婚嫁、营建"},
-{name:"亢",desc:"亢金龙，凶；大事不宜"},
-{name:"氐",desc:"氐土貉，吉；开市、签约可行"},
-{name:"房",desc:"房日兔，吉；嫁娶纳财"},
-{name:"心",desc:"心月狐，凶；忌远行动土"},
-{name:"尾",desc:"尾火虎，吉；适合安葬、修缮"},
-{name:"箕",desc:"箕水豹，凶；谨防口舌风波"},
-{name:"斗",desc:"斗木獬，吉；求财顺利"},
-{name:"牛",desc:"牛金牛，凶；不宜合作合伙"},
-{name:"女",desc:"女土蝠，吉；祈福许愿"},
-{name:"虚",desc:"虚日鼠，凶；万事保守"},
-{name:"危",desc:"危月燕，吉；搬家、开业"},
-{name:"室",desc:"室火猪，吉；建房装修"},
-{name:"壁",desc:"壁水貐，吉；求学文书"},
-{name:"奎",desc:"奎木狼，凶；提防是非"},
-{name:"娄",desc:"娄金狗，吉；祭祀聚会"},
-{name:"胃",desc:"胃土雉，吉；收获交易"},
-{name:"昴",desc:"昴日鸡，凶；远行不利"},
-{name:"毕",desc:"毕月乌，吉；求医、谈判"},
-{name:"觜",desc:"觜火猴，平；寻常小事可做"},
-{name:"参",desc:"参水猿，凶；避免争执"},
-{name:"井",desc:"井木犴，吉；修造、引水"},
-{name:"鬼",desc:"鬼金羊，凶；忌丧葬大事"},
-{name:"柳",desc:"柳土獐，平；不宜重大决策"},
-{name:"星",desc:"星日马，凶；火灾风险，谨慎"},
-{name:"张",desc:"张月鹿，吉；宴席庆典"},
-{name:"翼",desc:"翼火蛇，吉；文书签约"},
-{name:"轸",desc:"轸水蚓，吉；出行经商"},
-];
+    // 渲染老黄历数据
+    function renderHuangli() {
+        const d = new Date();
+        const lunar = Lunar.fromDate(d);
 
-// 十二时辰
-const shiChen = [
-{dz:"子",time:"23:00-00:59",god:"青龙",type:"黄道"},
-{dz:"丑",time:"01:00-02:59",god:"明堂",type:"黄道"},
-{dz:"寅",time:"03:00-04:59",god:"天刑",type:"黑道"},
-{dz:"卯",time:"05:00-06:59",god:"朱雀",type:"黑道"},
-{dz:"辰",time:"07:00-08:59",god:"金匮",type:"黄道"},
-{dz:"巳",time:"09:00-10:59",god:"天德",type:"黄道"},
-{dz:"午",time:"11:00-12:59",god:"白虎",type:"黑道"},
-{dz:"未",time:"13:00-14:59",god:"玉堂",type:"黄道"},
-{dz:"申",time:"15:00-16:59",god:"天牢",type:"黑道"},
-{dz:"酉",time:"17:00-18:59",god:"玄武",type:"黑道"},
-{dz:"戌",time:"19:00-20:59",god:"司命",type:"黄道"},
-{dz:"亥",time:"21:00-22:59",god:"勾陈",type:"黑道"},
-];
+        // 公历
+        document.getElementById('gongli-text').innerText = 
+            `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${lunar.getWeekInChinese()}`;
+        
+        // 农历
+        document.getElementById('nongli-text').innerText = 
+            `农历 ${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}`;
+        
+        // 干支
+        document.getElementById('ganzhi-text').innerText = 
+            `岁次 ${lunar.getYearInGanZhi()}（${lunar.getYearShengXiao()}）年 ${lunar.getMonthInGanZhi()}月 ${lunar.getDayInGanZhi()}日`;
 
-// 黄道黑道日简易判定
-function getHuangDaoDay(dayGanZhi){
-const hd = ["甲子","乙丑","丙寅","丁卯","戊辰","己巳","庚午","辛未","壬申","癸酉"];
-//简易演示逻辑，如需精准十二神值日可继续扩展
-const idx = dayGanZhi.charCodeAt(1)%12;
-const huang = [0,1,4,5,7,11];
-return huang.includes(idx) ? {flag:true,name:"黄道吉日"} : {flag:false,name:"黑道凶日"};
-}
+        // 细节
+        document.getElementById('nayin').innerText = lunar.getDayNaYin();
+        document.getElementById('jianshen').innerText = lunar.getJianShen() + '位';
+        document.getElementById('chongsha').innerText = `冲${lunar.getDayChongShengXiao()} 煞${lunar.getDaySha()}`;
+        document.getElementById('xingxiu').innerText = `${lunar.getXiu()}${lunar.getAnimal()}`;
 
-// 渲染黄历
-function renderDate(dateStr){
-const g = Lunar.fromDate(new Date(dateStr));
-const lunar = g.getLunar();
-const solar = g.getSolar();
-const ganzhiYear = g.getYearInGanZhi();
-const ganzhiMonth = g.getMonthInGanZhi();
-const ganzhiDay = g.getDayInGanZhi();
-const sx = g.getYearShengXiao();
-const jq = g.getJieQi() || "无";
-const yiArr = g.getYi();
-const jiArr = g.getJi();
-const xingIdx = g.getXingXiuIndex();
-const xing = xingxiuList[xingIdx % xingxiuList.length];
-const dayGZ = ganzhiDay;
-const hdInfo = getHuangDaoDay(dayGZ);
+        // 宜忌
+        const yiList = lunar.getDayYi();
+        const jiList = lunar.getDayJi();
+        document.getElementById('yi-text').innerHTML = yiList.length ? yiList.slice(0, 6).join('<br>') : '诸事不宜';
+        document.getElementById('ji-text').innerHTML = jiList.length ? jiList.slice(0, 6).join('<br>') : '无特别禁忌';
+    }
 
-let html = `
-<div class="row"><span class="label">公历</span><span class="val">${solar.toYmd()}</span></div>
-<div class="row"><span class="label">农历</span><span class="val">${lunar}</span></div>
-<div class="row"><span class="label">年柱</span><span class="val">${ganzhiYear}【${sx}年】</span></div>
-<div class="row"><span class="label">月柱</span><span class="val">${ganzhiMonth}</span></div>
-<div class="row"><span class="label">日柱</span><span class="val">${ganzhiDay}</span></div>
-<div class="row"><span class="label">节气</span><span class="val">${jq}</span></div>
-
-<div class="star">【二十八星宿】${xing.name}宿 ${xing.desc}</div>
-
-${hdInfo.flag
-?`<div class="huangdao">☀ ${hdInfo.name}</div>`
-:`<div class="heidao">☁ ${hdInfo.name}</div>`}
-
-<div class="item-block yi">宜：${yiArr.join("、") || "无"}</div>
-<div class="item-block ji">忌：${jiArr.join("、") || "无"}</div>
-
-<div style="margin-top:12px"><strong>十二时辰吉凶</strong></div>
-<div class="time-grid">
-`;
-shiChen.forEach(s=>{
-const cls = s.type=="黄道" ? "huangdao" : "heidao";
-html += `<div class="time-cell ${cls}">${s.dz}时 ${s.time}<br/>神煞：${s.god}【${s.type}】</div>`;
-});
-html += "</div>";
-document.getElementById("resultBox").innerHTML = html;
-}
-
-// 初始化
-const input = document.getElementById("daySelect");
-const now = new Date();
-input.valueAsDate = now;
-renderDate(input.value);
-input.onchange = ()=>renderDate(input.value);
+    // 页面加载完成后运行
+    window.onload = renderHuangli;
 </script>
+
 </body>
 </html>
